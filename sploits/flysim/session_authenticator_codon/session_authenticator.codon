@@ -1,0 +1,21 @@
+import time
+def generate_control_key(_id: str, label: str) -> str:
+    msg = _id + label
+    crc = 0xFFFFFFFF
+    polynomial = 0xEDB88320
+    
+    for char in msg:
+        crc ^= ord(char)
+        for _ in range(8):
+            if crc & 1:
+                crc = (crc >> 1) ^ polynomial
+            else:
+                crc >>= 1
+                
+    return hex(crc ^ 0xFFFFFFFF)[2:]
+
+def generate(_id: str, label: str) -> str:
+    return generate_control_key(_id, label)
+
+def verify(_id: str, label: str, control_key: str) -> bool:
+    return generate_control_key(_id, label) == control_key

@@ -1,0 +1,52 @@
+services:
+  filtranator:
+    build: server/
+    restart: unless-stopped
+    networks:
+      - filtranator_local
+    volumes:
+      - cleanx:/app/images
+    deploy:
+      resources:
+        limits:
+          cpus: 1
+          memory: 500M
+    ports:
+      - "6969:6969"
+  cleaner:
+    container_name: cleaner
+    build: cleaner
+    cpus: 0.25
+    pids_limit: 128
+    mem_limit: 128M
+    restart: unless-stopped
+    volumes:
+      - cleanx:/tmp/data
+    depends_on:
+      - filtranator
+  db:
+    container_name: db
+    build: db/
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: Users
+      POSTGRES_PASSWORD: password
+      PGDATA: /data/postgres
+    networks:
+      - filtranator_local
+    volumes:
+      - postgres:/data/postgres
+    deploy:
+      resources:
+        limits:
+          cpus: 1
+          memory: 500M
+
+
+networks:
+  filtranator_local: {}
+
+volumes:
+  cleanx: {}
+  postgres: {}

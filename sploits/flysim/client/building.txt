@@ -1,0 +1,10 @@
+sudo apt install python3.12-venv
+
+python3.12 -m venv flysim_client
+source flysim_client/bin/activate
+pip3.12 install -r requirements.txt
+pip3.12 install pyinstaller staticx
+
+python3.12 -m PyInstaller --onefile client
+staticx dist/client dist/client_static
+# dist/client_static is the file you need 

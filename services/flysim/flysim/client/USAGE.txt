@@ -1,0 +1,31 @@
+create drone:
+./client create --ip 10.80.1.2
+
+you can also specify label and (or) flight plan
+./client create --ip 10.80.1.2 --label asdf --flight-plan "1 BOOSTX [drone] 200\n55 BOOSTY [drone] 400\n"
+
+connect:
+./client connect --ip 10.80.1.2 --drone-id="676306da9da3a3b7141f3000" --control-key="c786e71f"
+
+connect with setting position and (or) velocity:
+./client connect --ip 10.80.1.2 --drone-id="676306da9da3a3b7141f3000" --control-key="c786e71f" --position 0 0 --velocity 1 2
+
+by default, client keeps connection for 30 seconds. if you need more, add --duration:
+./client connect --ip 10.80.1.2 --drone-id="676306da9da3a3b7141f3000" --control-key="c786e71f" --duration 9999
+
+list drones (only ids):
+./client list-drones --ip 10.80.1.2
+
+list drones (detailed):
+./client list-drones-details --ip 10.80.1.2
+
+list details but only for one drone (by label):
+./client list-drones-details --ip 10.80.1.2 --label p4MUiB5oEF5EHAnkMefO8
+
+do not forget to use --help:
+
+./client --help
+./client create --help
+./client connect --help
+./client list-drones --help
+./client list-drones-details --help

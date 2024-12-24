@@ -1,0 +1,27 @@
+services:
+  flysim:
+    restart: always
+    build: ./flysim
+    ports:
+      - "9000:9001"
+    depends_on:
+      - flysim-mongo
+    environment:
+      - MONGO_URI=mongodb://flysim-mongo:27017/mydatabase
+      - LD_LIBRARY_PATH=/root/.codon/lib/codon
+    # command: gunicorn -k gevent -w 1 --log-level debug -b 0.0.0.0:9001 server:app
+    command: gunicorn -k gevent -w 1 -b 0.0.0.0:9001 server:app
+    mem_limit: 2048m
+    cpu_count: 1
+
+  flysim-mongo:
+    restart: always
+    image: mongo:latest
+    volumes:
+      - mongodb_data:/data/db
+    mem_limit: 1024m
+    cpu_count: 1
+
+volumes:
+  mongodb_data:
+

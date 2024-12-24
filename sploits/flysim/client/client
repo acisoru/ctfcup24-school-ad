@@ -1,0 +1,113 @@
+#!/usr/bin/env python3
+
+import click
+import drone_client
+import json
+import time
+from typing import Optional
+
+
+class OrderedGroup(click.Group):
+    def list_commands(self, ctx):
+        # Return commands in the order they are defined
+        return self.commands.keys()
+
+
+@click.group(cls=OrderedGroup)
+def cli():
+    """Drone Control CLI"""
+    pass
+
+
+@cli.command()
+@click.option("--ip", default="127.0.0.1", help="Server IP address")
+@click.option("--label", help="Drone label")
+@click.option("--secret-data", help="Secret data for the drone")
+@click.option("--flight-plan", help="Flight plan for the drone")
+def create(ip, label, secret_data, flight_plan):
+    """Create a new drone"""
+    client = drone_client.DroneClient(ip)
+
+    if not client.create_drone(
+        label=label,
+        secret_data=secret_data,
+        flight_plan=flight_plan.replace(r"\n", "\n") if flight_plan else None,
+    ):
+        click.echo("Failed to create drone")
+        return
+
+    credentials = {
+        "drone_id": client.drone_id,
+        "control_key": client.control_key,
+        "ip": ip,
+    }
+
+    click.echo(f"Drone created successfully:")
+    click.echo(f"Drone ID: {client.drone_id}")
+    click.echo(f"Control Key: {client.control_key}")
+
+
+@cli.command()
+@click.option("--ip", default="127.0.0.1", help="Server IP address")
+@click.option("--drone-id", required=True, help="Drone ID")
+@click.option("--control-key", required=True, help="Control key")
+@click.option("--position", type=(float, float), help="Position coordinates (x, y)")
+@click.option("--velocity", type=(float, float), help="Velocity vector (vx, vy)")
+@click.option(
+    "--duration", default=30, help="Duration to keep connection alive (seconds)"
+)
+def connect(ip, drone_id, control_key, position, velocity, duration):
+    """Connect to an existing drone"""
+    client = drone_client.DroneClient(ip)
+    client.drone_id = drone_id
+    client.control_key = control_key
+
+    if not client.connect_to_drone():
+        click.echo("Failed to connect to drone")
+        return
+
+    click.echo(f"Connected to drone {drone_id}")
+
+    if position:
+        client.update_position(list(position))
+        click.echo(f"Updated position to {position}")
+
+    if velocity:
+        client.update_velocity(list(velocity))
+        click.echo(f"Updated velocity to {velocity}")
+
+    click.echo(f"Keeping connection alive for {duration} seconds...")
+    time.sleep(duration)
+
+    client.disconnect()
+    click.echo("Disconnected from drone")
+
+
+@cli.command()
+@click.option("--ip", default="127.0.0.1", help="Server IP address")
+def list_drones(ip):
+    """List all available drones"""
+    client = drone_client.DroneClient(ip)
+    client.get_all_drones()
+
+
+@cli.command()
+@click.option("--ip", default="127.0.0.1", help="Server IP address")
+@click.option(
+    "--label",
+    "label",
+    help="Target drone label. If label is not specified, all drones are shown.",
+)
+def list_drones_details(ip, label):
+    """List drone(s) with detailed information"""
+    client = drone_client.DroneClient(ip)
+    if label:
+        print(
+            client.get_drones_with_details(json.dumps([{"$match": {"label": label}}]))
+        )
+    else:
+        print(client.get_drones_with_details(json.dumps([{"$match": {}}])))
+
+
+if __name__ == "__main__":
+    cli()
